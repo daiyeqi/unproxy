@@ -8,4 +8,4 @@
 
 ## Download
 - unproxy.rsc
-  - https://raw.githubusercontent.com/daiyeqi/unproxy/release/unproxy.rscgit init
+  - https://raw.githubusercontent.com/daiyeqi/unproxy/release/unproxy.rsc
