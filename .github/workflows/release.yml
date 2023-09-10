@@ -42,12 +42,12 @@ jobs:
           do
               curl -sSL https://raw.githubusercontent.com/Loyalsoldier/geoip/release/text/${item}.txt > "./data/${item}.txt"
               python ./main.py -i "./data/${item}.txt" -4 "./address-list-v4.txt" -6 "./address-list-v6.txt"
-              cat address-list-v4.txt > unproxy.rsc
-              cat address-list-v6.txt >> unproxy.rsc
-              echo '/log info "proxy address list updated"' >> address-list-all.rsc
               # diff ${item}0.txt ${item}.txt -uT | grep -E "^(\+|\-)"$'\t' > ${item}.dff
               # cat ${item}.dff | grep -E "^(\+)"$'\t' | awk -F '\t' '{printf "add address=%s list=PROXY\n", $2}' | sed "s/|/'/g"
           done
+          cat address-list-v4.txt > unproxy.rsc
+          cat address-list-v6.txt >> unproxy.rsc
+          echo '/log info "proxy address list updated"' >> unproxy.rsc
         shell: bash
 
       - name: Move files to publish directory
