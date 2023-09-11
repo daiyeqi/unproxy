@@ -54,7 +54,7 @@ jobs:
         run: |
           mkdir -p publish
           cp *.rsc ./publish/
-          sha256sum unproxy.rsc > unproxy.rsc.sha256sum
+          sha256sum ./publish/unproxy.rsc > ./publish/unproxy.rsc.sha256sum
 
       - name: Release and upload assets
         uses: softprops/action-gh-release@v1
