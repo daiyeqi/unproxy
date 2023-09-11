@@ -50,10 +50,11 @@ jobs:
           echo '/log info "proxy address list updated"' >> unproxy.rsc
         shell: bash
 
-      - name: Move files to publish directory
+      - name: Move files to publish directory and generate sha256 hash
         run: |
           mkdir -p publish
           cp *.rsc ./publish/
+          sha256sum unproxy.rsc > unproxy.rsc.sha256sum
 
       - name: Release and upload assets
         uses: softprops/action-gh-release@v1
