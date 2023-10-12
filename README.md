@@ -1,5 +1,5 @@
 ## unProxy for RouterOS
-[![Github Actions](https://img.shields.io/github/actions/workflow/status/daiyeqi/unproxy/release.yml?branch=master "Github Actions")](https://github.com/daiyeqi/unproxy/actions)
+[![Github Actions](https://img.shields.io/github/actions/workflow/status/daiyeqi/unproxy/release.yml?branch=main "Github Actions")](https://github.com/daiyeqi/unproxy/actions)
 
 本项目每周五自动生成 RSC 脚本文件，该脚本适用于 RouterOS 系统导入防火墙 IP 地址列表，便于设置一些特殊的防火墙规则 :smirk: 。
 
