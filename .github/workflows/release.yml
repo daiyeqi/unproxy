@@ -1,0 +1,77 @@
+name: Generate Firewall Address-list of RouterOS
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 3 * * 4"
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - "**/README.md"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      ADDRESSLIST: "telegram netflix fastly cloudfront cloudflare"
+    steps:
+      - name: Set variables
+        run: |
+          echo "TAG_NAME=$(date +%Y%m%d%H%M%S)" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Checkout codebase
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python 3.x
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.13
+
+      - name: Generate address-list-all.rsc
+        run: |
+          echo -e '/ip firewall address-list remove [/ip firewall address-list find list=PROXY]\n/ip firewall address-list' > address-list-v4.txt
+          echo -e '/ipv6 firewall address-list remove [/ipv6 firewall address-list find list=PROXY]\n/ipv6 firewall address-list' > address-list-v6.txt
+          mkdir -p ./data
+          for item in ${{ env.ADDRESSLIST }}; do
+            curl -sSL https://raw.githubusercontent.com/Loyalsoldier/geoip/release/text/${item}.txt > "./data/${item}.txt"
+            python ./main.py -i "./data/${item}.txt" -4 "./address-list-v4.txt" -6 "./address-list-v6.txt"
+            # diff ${item}0.txt ${item}.txt -uT | grep -E "^(\+|\-)"$'\t' > ${item}.dff
+            # cat ${item}.dff | grep -E "^(\+)"$'\t' | awk -F '\t' '{printf "add address=%s list=PROXY\n", $2}' | sed "s/|/'/g"
+          done
+          cat address-list-v4.txt > unproxy.rsc
+          cat address-list-v6.txt >> unproxy.rsc
+          echo '/log info "proxy address list updated"' >> unproxy.rsc
+        shell: bash
+
+      - name: Move files to publish directory and generate sha256 hash
+        run: |
+          mkdir -p publish
+          cp *.rsc ./publish/
+          sha256sum ./publish/unproxy.rsc > ./publish/unproxy.rsc.sha256sum
+
+      - name: Release and upload assets
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ env.TAG_NAME }}
+          tag_name: ${{ env.TAG_NAME }}
+          draft: false
+          prerelease: false
+          files: |
+            ./publish/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Git push assets to "release" branch
+        run: |
+          cd publish || exit 1
+          git init
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b release
+          git add .
+          git commit -m "${{ env.TAG_NAME }}"
+          git remote add origin "https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}"
+          git push -f origin release
