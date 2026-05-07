@@ -58,13 +58,9 @@ jobs:
       - name: Cleanup releases and tags
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          KEEP_RELEASES: 5
         run: |
-          gh release list --repo "${GITHUB_REPOSITORY}" --limit 1000 | while read -r line; do
-            tag="$(echo "$line" | awk '{print $1}')"
-            if [ -n "$tag" ]; then
-              gh release delete "$tag" --repo "${GITHUB_REPOSITORY}" --cleanup-tag --yes
-            fi
-          done
+          gh release list --limit 1000 --json tagName --jq ".[$KEEP_RELEASES:] | .[].tagName" | xargs -r -n1 gh release delete --cleanup-tag --yes
         shell: bash
 
       - name: Release and upload assets
