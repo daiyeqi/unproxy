@@ -9,6 +9,9 @@ on:
     paths-ignore:
       - "**/README.md"
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -21,14 +24,14 @@ jobs:
         shell: bash
 
       - name: Checkout codebase
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Set up Python 3.x
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
-          python-version: 3.13
+          python-version: 3.14
 
       - name: Generate address-list-all.rsc
         run: |
@@ -52,11 +55,20 @@ jobs:
           cp *.rsc ./publish/
           sha256sum ./publish/unproxy.rsc > ./publish/unproxy.rsc.sha256sum
 
+      - name: Cleanup releases and tags
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          KEEP_RELEASES: 5
+        run: |
+          gh release list --repo "${{ github.repository }}" --limit 1000 --json tagName --jq ".[$KEEP_RELEASES:] | .[].tagName" | xargs -r -n1 gh release delete --repo "${{ github.repository }}" --cleanup-tag --yes
+        shell: bash
+
       - name: Release and upload assets
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           name: ${{ env.TAG_NAME }}
           tag_name: ${{ env.TAG_NAME }}
+          generate_release_notes: true
           draft: false
           prerelease: false
           files: |
